@@ -4,6 +4,10 @@
   "description": "JSON-based communication for JavaScript in Node.js",
   "main": "index.js",
   "scripts": {
+    "test": "npm run test:lint",
+    "test:lint": "eslint --ext .ts \".\"",
+    "lint": "eslint --fix --ext .ts \".\"",
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
@@ -15,5 +19,21 @@
   "bugs": {
     "url": "https://github.com/NGCP/communication-js/issues"
   },
-  "homepage": "https://github.com/NGCP/communication-js#readme"
+  "homepage": "https://github.com/NGCP/communication-js#readme",
+  "files": [
+    "lib"
+  ],
+  "dependencies": {
+    "serialport": "^8.0.6",
+    "xbee-api": "^0.6.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^2.18.0",
+    "@typescript-eslint/parser": "^2.18.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-chai-friendly": "^0.5.0",
+    "eslint-plugin-import": "^2.20.0",
+    "typescript": "^3.7.5"
+  }
 }
