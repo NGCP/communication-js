@@ -7,7 +7,7 @@
     "test": "npm run test:lint",
     "test:lint": "eslint --ext .ts \".\"",
     "lint": "eslint --fix --ext .ts \".\"",
-    "build": "tsc"
+    "build": "tsc --project . --outDir lib --pretty"
   },
   "repository": {
     "type": "git",
@@ -28,10 +28,12 @@
     "xbee-api": "^0.6.0"
   },
   "devDependencies": {
+    "@types/serialport": "^8.0.0",
     "@typescript-eslint/eslint-plugin": "^2.18.0",
     "@typescript-eslint/parser": "^2.18.0",
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-import-resolver-typescript": "^2.0.0",
     "eslint-plugin-chai-friendly": "^0.5.0",
     "eslint-plugin-import": "^2.20.0",
     "typescript": "^3.7.5"
