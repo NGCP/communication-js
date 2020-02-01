@@ -1,0 +1,11 @@
+language: node_js
+
+# Use latest version of Node.js
+node_js:
+  - lts/*
+
+# Cache node_modules after testing
+cache: npm
+
+# Scripts to run to test application
+script:
