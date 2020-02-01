@@ -1,6 +1,6 @@
 {
   "name": "communication-js",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "license": "MIT",
   "author": "Northrop Grumman Collaboration Project",
   "description": "JSON-based communication for JavaScript in Node.js",
