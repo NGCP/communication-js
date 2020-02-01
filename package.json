@@ -1,25 +1,16 @@
 {
   "name": "communication-js",
-  "version": "1.0.0",
+  "version": "0.0.1",
+  "license": "MIT",
+  "author": "Northrop Grumman Collaboration Project",
   "description": "JSON-based communication for JavaScript in Node.js",
-  "main": "index.js",
+  "repository": "https://github.com/NGCP/communication-js",
   "scripts": {
     "test": "npm run test:lint",
     "test:lint": "eslint --ext .ts \".\"",
     "lint": "eslint --fix --ext .ts \".\"",
     "build": "tsc --project . --outDir lib --pretty"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/NGCP/communication-js.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/NGCP/communication-js/issues"
-  },
-  "homepage": "https://github.com/NGCP/communication-js#readme",
   "files": [
     "lib"
   ],
