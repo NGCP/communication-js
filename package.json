@@ -15,10 +15,12 @@
     "lib"
   ],
   "dependencies": {
+    "msgpack-lite": "^0.1.26",
     "serialport": "^8.0.6",
     "xbee-api": "^0.6.0"
   },
   "devDependencies": {
+    "@types/msgpack-lite": "^0.1.7",
     "@types/serialport": "^8.0.0",
     "@typescript-eslint/eslint-plugin": "^2.18.0",
     "@typescript-eslint/parser": "^2.18.0",
