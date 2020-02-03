@@ -48,6 +48,11 @@ rules:
   # @typescript-eslint/no-use-before-define is already defined
   no-use-before-define: off
 
+  # Prevent usage of file extension in import statements
+  import/extensions:
+    - error
+    - never
+
   # Re-adding changed Airbnb rules (removed most likely from @typescript-eslint/recommended)
   "@typescript-eslint/camelcase":
     - error
