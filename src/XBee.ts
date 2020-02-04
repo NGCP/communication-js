@@ -4,7 +4,7 @@ import * as XBeeAPI from 'xbee-api';
 
 export default class XBee {
   /** Callback function when xbee receives a zigbee packet from another xbee */
-  private onReceiveData: (frame: XBeeAPI.Frame) => void;
+  private onReceiveData: (data: object) => void;
 
   /** Callback function when xbee port connection opens */
   private onOpen?: () => void;
@@ -36,7 +36,7 @@ export default class XBee {
   public constructor(
     port: string,
     options: SerialPort.OpenOptions,
-    onReceiveData: (frame: XBeeAPI.Frame) => void,
+    onReceiveData: (data: object) => void,
     onOpen?: () => void,
     onClose?: () => void,
     onFailure?: (error?: Error) => void,
