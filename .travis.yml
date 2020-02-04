@@ -13,3 +13,6 @@ script:
   # to run in sequence
   - npm run test:lint
   - npm run test:unit
+
+# Run coverage after tests pass
+after_success: npm run coverage
