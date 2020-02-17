@@ -4,7 +4,7 @@ import * as XBeeAPI from 'xbee-api';
 
 export default class XBee {
   /** Callback function when xbee receives a zigbee packet from another xbee */
-  private onReceiveData: (data: object) => void;
+  private onReceiveObject: (obj: object) => void;
 
   /** Callback function when xbee port connection opens */
   private onOpen?: () => void;
@@ -25,9 +25,9 @@ export default class XBee {
   /**
    * Creates an instance of an xbee and opens connection.
    *
-   * @param port The port the xbee will be connected to.
+   * @param port The port the xbee will be connected to
    * @param options Additional options for the xbee
-   * @param onReceiveData Callback function when xbee receives a zigbee packet from another xbee
+   * @param onReceiveObject Callback function when xbee receives a non-null object
    * @param onOpen Callback function when xbee port connection opens
    * @param onClose Callback function when xbee connection closes
    * @param onFailure Callback function when xbee connection fails to open/close
@@ -36,13 +36,13 @@ export default class XBee {
   public constructor(
     port: string,
     options: SerialPort.OpenOptions,
-    onReceiveData: (data: object) => void,
+    onReceiveObject: (obj: object) => void,
     onOpen?: () => void,
     onClose?: () => void,
     onFailure?: (error?: Error) => void,
     onError?: (error: Error) => void,
   ) {
-    this.onReceiveData = onReceiveData;
+    this.onReceiveObject = onReceiveObject;
     this.onOpen = onOpen;
     this.onClose = onClose;
     this.onFailure = onFailure;
@@ -67,9 +67,9 @@ export default class XBee {
     this.xbee.parser.on('data', (frame): void => {
       if (frame.type === XBeeAPI.constants.FRAME_TYPE.ZIGBEE_RECEIVE_PACKET) {
         try {
-          const data = JSON.parse(msgpack.decode(frame.data));
-          if (typeof data === 'object' && data !== null) {
-            this.onReceiveData(data);
+          const obj = JSON.parse(msgpack.decode(frame.data));
+          if (typeof obj === 'object' && obj !== null) {
+            this.onReceiveObject(obj);
           }
         } catch (e) {
           // eslint-disable-line no-empty
