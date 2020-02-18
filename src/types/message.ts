@@ -158,7 +158,7 @@ export type JSONMessage = Message & {
   time: number;
 };
 
-/** Type guard for a JSON Message */
+/** Type guard for a JSON Message, only checks for required id, tid, sid, time, and type fields */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isJSONMessage(object: { [key: string]: any }): object is JSONMessage {
   if (!object.type || !isMessageType(object.type)) return false;
