@@ -3,9 +3,10 @@
  * https://ground-control-station.readthedocs.io/en/latest/communications/jobs.html#list-of-tasks
  */
 
+import * as Misc from './misc';
+
 interface TaskTypeBase {
-  taskType: 'takeoff' | 'loiter' | 'isrSearch' | 'payloadDrop' | 'land' | 'retrieveTarget'
-  | 'deliverTarget' | 'quickScan' | 'detailedSearch';
+  taskType: Misc.TaskType;
 }
 
 export interface TakeoffTask extends TaskTypeBase {
@@ -116,7 +117,6 @@ export interface QuickScanTask extends TaskTypeBase {
     }
   ];
 }
-
 
 export interface DetailedSearchTask extends TaskTypeBase {
   taskType: 'detailedSearch';
