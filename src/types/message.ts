@@ -4,42 +4,24 @@
  * https://ground-control-station.readthedocs.io/en/latest/communications/messages.html
  */
 
+import * as Misc from './misc';
 import * as Task from './task';
 
-/** Jobs vehicles can have */
-type JobType = 'isrSearch' | 'payloadDrop' | 'ugvRescue' | 'uuvRescue'
-| 'quickScan' | 'detailedSearch' | 'guide';
-
-/** Type guard for JobType */
-function isJobType(type: string): type is JobType {
-  return type === 'isrSearch' || type === 'payloadDrop' || type === 'ugvRescue'
-    || type === 'uuvRescue' || type === 'quickScan' || type === 'detailedSearch'
-    || type === 'guide';
-}
-
-type VehicleStatus = 'ready' | 'error' | 'disconnected' | 'waiting' | 'running' | 'paused';
-
-/** All types of messages */
-type MessageType = 'start' | 'addMission' | 'pause' | 'resume' | 'stop' | 'connectionAck' | 'update'
-| 'poi' | 'complete' | 'connect' | 'ack' | 'badMessage';
-
-/** Type guard for MessageType */
-function isMessageType(type: string): type is MessageType {
-  return type === 'string' || type === 'addMission' || type === 'pause' || type === 'resume'
-    || type === 'stop' || type === 'connectionAck' || type === 'update' || type === 'poi'
-    || type === 'complete' || type === 'connect' || type === 'ack' || type === 'badMessage';
-}
-
 interface MessageTypeBase {
-  type: MessageType;
+  type: Misc.MessageType;
 }
 
 // Definitions for all messages from GCS to vehicles.
-// Does not need type guards since all of these messages are from GCS.
 
 export interface StartMessage extends MessageTypeBase {
   type: 'start';
-  jobType: JobType;
+  jobType: Misc.JobType;
+}
+
+/** Type guard for StartMessage */
+export function isStartMessage(message: Message): message is StartMessage {
+  return message.type === 'start'
+    && Misc.isJobType(message.jobType);
 }
 
 export interface AddMissionMessage extends MessageTypeBase {
@@ -47,24 +29,49 @@ export interface AddMissionMessage extends MessageTypeBase {
   missionInfo: Task.Task;
 }
 
+/** Type guard for AddMissionMessage */
+export function isAddMissionMessage(message: Message): message is AddMissionMessage {
+  return message.type === 'addMission'
+    && message.missionInfo && Misc.isTaskType(message.missionInfo.taskType);
+}
+
 export interface PauseMessage extends MessageTypeBase {
   type: 'pause';
+}
+
+/** Type guard for PauseMessage */
+export function isPauseMessage(message: Message): message is PauseMessage {
+  return message.type === 'pause';
 }
 
 export interface ResumeMessage extends MessageTypeBase {
   type: 'resume';
 }
 
+/** Type guard for ResumeMessage */
+export function isResumeMessage(message: Message): message is ResumeMessage {
+  return message.type === 'resume';
+}
+
 export interface StopMessage extends MessageTypeBase {
   type: 'stop';
+}
+
+/** Type guard for StopMessage */
+export function isStopMessage(message: Message): boolean {
+  return message.type === 'stop';
 }
 
 export interface ConnectionAckMessage extends MessageTypeBase {
   type: 'connectionAck';
 }
 
+/** Type guard for ConnectionAckMessage */
+export function isConnectionAcknowledgementMessage(message: Message): boolean {
+  return message.type === 'connectionAck';
+}
+
 // Definitions for all messages from vehicles to GCS.
-// Needs type guards since all of these messages are not from GCS and possibly could be invalid.
 
 export interface UpdateMessage extends MessageTypeBase {
   type: 'update';
@@ -73,7 +80,7 @@ export interface UpdateMessage extends MessageTypeBase {
   alt?: number;
   heading?: number;
   battery?: number;
-  status: VehicleStatus;
+  status: Misc.VehicleStatus;
   errorMessage?: string;
 }
 
@@ -115,12 +122,12 @@ export function isCompleteMessage(message: Message): message is CompleteMessage 
 
 export interface ConnectMessage extends MessageTypeBase {
   type: 'connect';
-  jobsAvailable: JobType[];
+  jobsAvailable: Misc.JobType[];
 }
 
 /** Type guard for ConnectMessage */
 export function isConnectMessage(message: Message): message is ConnectMessage {
-  return message.type === 'connect' && message.jobsAvailable.every(isJobType);
+  return message.type === 'connect' && message.jobsAvailable.every(Misc.isJobType);
 }
 
 // Definitions for all other message types. Sent between GCS and vehicles.
@@ -161,7 +168,7 @@ export type JSONMessage = Message & {
 /** Type guard for a JSON Message, only checks for required id, tid, sid, time, and type fields */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isJSONMessage(object: { [key: string]: any }): object is JSONMessage {
-  if (!object.type || !isMessageType(object.type)) return false;
+  if (!object.type || !Misc.isMessageType(object.type)) return false;
 
   const message = object as JSONMessage;
   return Number.isInteger(message.id) && Number.isInteger(message.tid)
