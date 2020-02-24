@@ -20,7 +20,11 @@ interface Handler<T> {
  * event (so if it should keep looking out for that event).
  */
 export default class UpdateHandler {
-  private handlers: { [key: string]: Handler<any>[] | undefined } = {};
+  handlers: Map<string, Handler<any>[]>;
+
+  public constructor() {
+    this.handlers = new Map<string, Handler<any>[]>();
+  }
 
   /**
    * Adds a new handler to check for a specific event.
@@ -29,6 +33,7 @@ export default class UpdateHandler {
    * @param onEvent Callback function when the handler sees event happening.
    * @param shouldRemove Callback function to determine if handler should be removed.
    * @param expirationTime Amount of time for the handler to expire.
+   * @param onExpire Callback function when handler expires.
    * @returns The handler created. Normally never need to access the handler itself unless it
    *          needs to be manually removed using the handler.remove() function.
    */
@@ -37,6 +42,7 @@ export default class UpdateHandler {
     onEvent: (value: T, options?: object) => void,
     shouldRemove: (value: T, options?: object) => boolean,
     expirationTime?: number,
+    onExpire?: () => void,
   ): Handler<T> {
     const handler: Handler<T> = {
       onEvent,
@@ -47,17 +53,21 @@ export default class UpdateHandler {
     if (expirationTime !== undefined) {
       handler.expiry = setTimeout(() => {
         // Deletes the handler when it expires
-        const currentHandlers = this.handlers[eventName] || [];
-        this.handlers[eventName] = currentHandlers.filter(
+        const currentHandlers = this.handlers.get(eventName) || [];
+        this.handlers.set(eventName, currentHandlers.filter(
           (lis): boolean => lis !== handler,
-        );
+        ));
+
+        if (onExpire !== undefined) {
+          onExpire();
+        }
       }, expirationTime);
     }
 
     // Adds the handler to the list with the proper event name.
-    const currentHandlers = this.handlers[eventName] || [];
+    const currentHandlers = this.handlers.get(eventName) || [];
     currentHandlers.push(handler);
-    this.handlers[eventName] = currentHandlers;
+    this.handlers.set(eventName, currentHandlers);
 
     return handler;
   }
@@ -71,18 +81,16 @@ export default class UpdateHandler {
    * @param options Extra information about the event.
    */
   public processEvent<T>(eventName: string, value: T, options?: object): void {
-    if (!this.handlers[eventName]) return;
-
-    const currentHandlers = this.handlers[eventName] as Handler<T>[];
-    this.handlers[eventName] = currentHandlers.filter((handler) => {
+    const currentHandlers = this.handlers.get(eventName) || [];
+    this.handlers.set(eventName, currentHandlers.filter((handler) => {
       handler.onEvent(value, options);
 
       const shouldRemoveHandler = handler.shouldRemove(value, options);
-      if (shouldRemoveHandler && handler.expiry) {
+      if (shouldRemoveHandler && handler.expiry !== undefined) {
         clearTimeout(handler.expiry);
       }
       return !shouldRemoveHandler;
-    });
+    }));
   }
 
   /**
@@ -93,12 +101,12 @@ export default class UpdateHandler {
    * @param handler Instance of handler to remove.
    */
   private removeHandler<T>(eventName: string, handler: Handler<T>): void {
-    if (handler.expiry) {
+    if (handler.expiry !== undefined) {
       clearTimeout(handler.expiry);
     }
 
     // Removes the handler from the event's list of handlers.
-    const currentHandlers = this.handlers[eventName] || [];
-    this.handlers[eventName] = currentHandlers.filter((h) => handler !== h);
+    const currentHandlers = this.handlers.get(eventName) || [];
+    this.handlers.set(eventName, currentHandlers.filter((h) => handler !== h));
   }
 }
