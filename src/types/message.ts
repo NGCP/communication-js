@@ -58,16 +58,18 @@ export interface StopMessage extends MessageTypeBase {
 }
 
 /** Type guard for StopMessage */
-export function isStopMessage(message: Message): boolean {
+export function isStopMessage(message: Message): message is StopMessage {
   return message.type === 'stop';
 }
 
-export interface ConnectionAckMessage extends MessageTypeBase {
+export interface ConnectionAcknowledgementMessage extends MessageTypeBase {
   type: 'connectionAck';
 }
 
 /** Type guard for ConnectionAckMessage */
-export function isConnectionAcknowledgementMessage(message: Message): boolean {
+export function isConnectionAcknowledgementMessage(
+  message: Message,
+): message is ConnectionAcknowledgementMessage {
   return message.type === 'connectionAck';
 }
 
@@ -154,7 +156,7 @@ export function isBadMessage(message: Message): message is BadMessage {
 }
 
 export type Message = StartMessage | AddMissionMessage | PauseMessage | ResumeMessage | StopMessage
-| ConnectionAckMessage | UpdateMessage | POIMessage | CompleteMessage | ConnectMessage
+| ConnectionAcknowledgementMessage | UpdateMessage | POIMessage | CompleteMessage | ConnectMessage
 | AcknowledgementMessage | BadMessage;
 
 /** Same as a Message, but has the required id, tid, sid, time fields. */
@@ -171,6 +173,21 @@ export function isJSONMessage(object: { [key: string]: any }): object is JSONMes
   if (!object.type || !Misc.isMessageType(object.type)) return false;
 
   const message = object as JSONMessage;
-  return Number.isInteger(message.id) && Number.isInteger(message.tid)
-    && Number.isInteger(message.sid) && Number.isInteger(message.time);
+  if (!Number.isInteger(message.id) || !Number.isInteger(message.tid)
+    || !Number.isInteger(message.sid) || !Number.isInteger(message.time)) {
+    return false;
+  }
+
+  return isStartMessage(message)
+    || isAddMissionMessage(message)
+    || isPauseMessage(message)
+    || isResumeMessage(message)
+    || isStopMessage(message)
+    || isConnectionAcknowledgementMessage(message)
+    || isUpdateMessage(message)
+    || isPOIMessage(message)
+    || isCompleteMessage(message)
+    || isConnectMessage(message)
+    || isAcknowledgementMessage(message)
+    || isBadMessage(message);
 }
