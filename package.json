@@ -1,21 +1,19 @@
 {
   "name": "communication-js",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "license": "MIT",
   "author": "Northrop Grumman Collaboration Project",
   "description": "JSON-based communication for JavaScript in Node.js",
   "repository": "https://github.com/NGCP/communication-js",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
-    "test": "npm run test:lint && npm run test:unit",
+    "test": "npm run test:lint && npm run test:unit && npm run build",
     "test:lint": "eslint --ext .ts \".\"",
     "test:unit": "nyc mocha --require ts-node/register test/**/*.test.ts",
-    "lint": "eslint --fix --ext .ts \".\"",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
-    "build": "tsc --project . --outDir lib --pretty"
+    "build": "tsc --project ."
   },
-  "files": [
-    "lib"
-  ],
   "dependencies": {
     "msgpack-lite": "^0.1.26",
     "serialport": "^8.0.6",
