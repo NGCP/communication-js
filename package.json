@@ -1,12 +1,12 @@
 {
   "name": "communication-js",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "author": "Northrop Grumman Collaboration Project",
   "description": "JSON-based communication for JavaScript in Node.js",
   "repository": "https://github.com/NGCP/communication-js",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "npm run test:lint && npm run test:unit && npm run build",
     "test:lint": "eslint --ext .ts \".\"",
