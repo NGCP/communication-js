@@ -1,8 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var disconnectionTimeMs = 20000;
-var messageSendRateMs = 10000;
-var vehicles = {
+/** Amount of time before a vehicle disconnects if it receives no messages from the other */
+exports.disconnectionTimeMs = 20000;
+/**
+ * Amount of time before a message that requires acknowledgement is sent again if it is not
+ * acknowledged
+ */
+exports.messageSendRateMs = 10000;
+/** Map of vehicles' ID to their information */
+exports.vehicles = {
     0: {
         macAddress: '0013A2004194754E',
         name: 'GCS',
@@ -48,15 +54,4 @@ var vehicles = {
         name: 'Blimp',
         type: 'plane',
     },
-};
-exports.default = {
-    /** Amount of time before a vehicle disconnects if it receives no messages from the other */
-    disconnectionTimeMs: disconnectionTimeMs,
-    /**
-     * Amount of time before a message that requires acknowledgement is sent again if it is not
-     * acknowledged
-     */
-    messageSendRateMs: messageSendRateMs,
-    /** Map of vehicles' ID to their information */
-    vehicles: vehicles,
 };

@@ -1,7 +1,14 @@
-const disconnectionTimeMs = 20000;
-const messageSendRateMs = 10000;
+/** Amount of time before a vehicle disconnects if it receives no messages from the other */
+export const disconnectionTimeMs = 20000;
 
-const vehicles: {
+/**
+ * Amount of time before a message that requires acknowledgement is sent again if it is not
+ * acknowledged
+ */
+export const messageSendRateMs = 10000;
+
+/** Map of vehicles' ID to their information */
+export const vehicles: {
   [key: number]: { macAddress: string; name: string; type: 'station' | 'plane' | 'rover' };
 } = {
   0: {
@@ -49,17 +56,4 @@ const vehicles: {
     name: 'Blimp',
     type: 'plane',
   },
-};
-
-export default {
-  /** Amount of time before a vehicle disconnects if it receives no messages from the other */
-  disconnectionTimeMs,
-  /**
-   * Amount of time before a message that requires acknowledgement is sent again if it is not
-   * acknowledged
-   */
-  messageSendRateMs,
-
-  /** Map of vehicles' ID to their information */
-  vehicles,
 };

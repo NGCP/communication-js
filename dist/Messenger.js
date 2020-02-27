@@ -10,9 +10,6 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
@@ -20,8 +17,11 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-var config_1 = __importDefault(require("./config/config"));
+var config = __importStar(require("./config/config"));
 var Message = __importStar(require("./types/message"));
 var UpdateHandler_1 = __importDefault(require("./UpdateHandler"));
 var XBee_1 = __importDefault(require("./XBee"));
@@ -145,10 +145,10 @@ var Messenger = /** @class */ (function () {
         var jsonMessage = __assign({ id: this.sendingMessageId, sid: this.vehicleId, tid: targetVehicleId, time: Date.now() }, message);
         this.sendingMessageId += 1;
         // Send message
-        if (config_1.default.vehicles[targetVehicleId] === undefined) {
+        if (config.vehicles[targetVehicleId] === undefined) {
             throw new Error('Provided target vehicle ID does not point to a valid vehicle');
         }
-        this.xbee.sendData(jsonMessage, config_1.default.vehicles[targetVehicleId].macAddress);
+        this.xbee.sendData(jsonMessage, config.vehicles[targetVehicleId].macAddress);
         if (Message.isAcknowledgementMessage(message)
             || Message.isConnectionAcknowledgementMessage(message)
             || Message.isBadMessage(message)) {
@@ -157,9 +157,9 @@ var Messenger = /** @class */ (function () {
         // Set interval to repeatedly send message until it is acknowledged
         this.sendingInterval.set(targetVehicleId, setInterval(function () {
             _this.xbee.sendData(jsonMessage, '');
-        }, config_1.default.messageSendRateMs));
+        }, config.messageSendRateMs));
         // Add handler to handle the event that this message is acknowledged
-        this.updateHandler.addHandler(Messenger.generateHash(targetVehicleId, jsonMessage.id), function (ackMessage) { return _this.processAcknowledgement(ackMessage.sid); }, function () { return true; }, config_1.default.disconnectionTimeMs, function () {
+        this.updateHandler.addHandler(Messenger.generateHash(targetVehicleId, jsonMessage.id), function (ackMessage) { return _this.processAcknowledgement(ackMessage.sid); }, function () { return true; }, config.disconnectionTimeMs, function () {
             if (_this.onVehicleDisconnect !== undefined) {
                 _this.onVehicleDisconnect(targetVehicleId);
             }

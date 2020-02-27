@@ -1,5 +1,5 @@
 import SerialPort from 'serialport';
-import config from './config/config';
+import * as config from './config/config';
 import * as Misc from './types/misc';
 import * as Message from './types/message';
 import * as Task from './types/task';
