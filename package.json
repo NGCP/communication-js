@@ -1,6 +1,6 @@
 {
   "name": "communication-js",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "license": "MIT",
   "author": "Northrop Grumman Collaboration Project",
   "description": "JSON-based communication for JavaScript in Node.js",
@@ -12,7 +12,7 @@
     "test:lint": "eslint --ext .ts \".\"",
     "test:unit": "nyc mocha --require ts-node/register test/**/*.test.ts",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
-    "build": "tsc --project ."
+    "build": "tsc"
   },
   "dependencies": {
     "msgpack-lite": "^0.1.26",
