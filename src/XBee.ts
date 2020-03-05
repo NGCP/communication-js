@@ -1,6 +1,6 @@
 import msgpack from 'msgpack-lite';
-import SerialPort from 'serialport';
-import * as XBeeAPI from 'xbee-api';
+import SerialPort from '@serialport/stream';
+import XBeeAPI from 'xbee-api';
 
 export default class XBee {
   /** Callback function when xbee receives a zigbee packet from another xbee */
@@ -57,7 +57,7 @@ export default class XBee {
     this.serialport.on('open', () => this.onOpen);
     this.serialport.on('close', () => this.onClose);
     this.serialport.on('error', (error: Error) => {
-      if (this.onError) {
+      if (this.onError !== undefined) {
         this.onError(error);
       }
     });
@@ -108,7 +108,7 @@ export default class XBee {
   }
 
   private failureCallback(error?: Error | null): void {
-    if (error && this.onFailure) {
+    if (error && this.onFailure !== undefined) {
       this.onFailure(error);
     }
   }
