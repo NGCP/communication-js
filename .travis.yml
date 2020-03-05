@@ -4,15 +4,17 @@ language: node_js
 node_js:
   - lts/*
 
-# Cache node_modules after testing
-cache: npm
-
 # Scripts to run to test application
 script:
-  # Running "npm test" in TravisCI will run all scripts in parallel so this is to force them
-  # to run in sequence
-  - npm run test:lint
-  - npm run test:unit
+  - npm test
 
-# Run coverage after tests pass
-after_success: npm run coverage
+# Scripts to run after build success/failure
+after_success:
+  - npm run coverage
+  - wget https://raw.githubusercontent.com/NGCP/GCS/master/script/webhook.sh
+  - chmod +x webhook.sh
+  - ./webhook.sh success
+after_failure:
+  - wget https://raw.githubusercontent.com/NGCP/GCS/master/script/webhook.sh
+  - chmod +x webhook.sh
+  - ./webhook.sh failure
