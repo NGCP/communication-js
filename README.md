@@ -11,21 +11,26 @@ NGCP's communication framework for JSON-based communication in Node.js JavaScrip
 
 ## Quick start
 
-To use this package in your Node.js project, you will need to clone this repository in the same
-directory as your project, and create a dependency on it:
+To use this package in your Node.js project, you will need to do the following:
+
+ 1. Clone this repository and build it.
 
 ```bash
-# from your project directory
-cd ..
 git clone https://github.com/NGCP/communication-js.git
 cd communication-js
-npm link
-cd ../your-project-name
-npm link communication-js
+npm run build
 ```
 
-Whenever the code here is updated, you can simply run `git pull` in your local `communication-js`
-directory and the code will update.
+ 2. Link your project to this repository.
+
+```bash
+ npm link
+ cd path/to/your/project
+ npm link communication-js
+```
+
+Whenever the code here is updated, you can simply run `git pull` in your `communication-js`
+directory, run `npm run build`, and the code will update.
 
 ## License
 

@@ -5,7 +5,14 @@
     "outDir": "dist",
     "declaration": true,
     "strict": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "baseUrl": ".",
+    "paths": {
+      "@serialport/binding-abstract": ["typings/@serialport/binding-abstract"],
+      "@serialport/binding-mock": ["typings/@serialport/binding-mock"],
+      "@serialport/stream": ["typings/@serialport/stream"],
+      "xbee-api": ["typings/xbee-api"]
+    }
   },
-  "exclude": ["node_modules", "dist", "test"]
+  "exclude": ["node_modules", "dist"]
 }
