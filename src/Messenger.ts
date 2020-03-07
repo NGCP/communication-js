@@ -84,7 +84,6 @@ export default class Messenger {
    * @param onReceiveObject Callback function when xbee receives a non-null object
    * @param onOpen Callback function when xbee port connection opens
    * @param onClose Callback function when xbee connection closes
-   * @param onFailure Callback function when xbee connection fails to open/close
    * @param onError Callback function when xbee connection encounters an error
    */
   public constructor(
@@ -93,10 +92,9 @@ export default class Messenger {
     options: SerialPort.OpenOptions,
     onOpen?: () => void,
     onClose?: () => void,
-    onFailure?: (error?: Error) => void,
-    onError?: (error: Error) => void,
+    onError?: (error?: Error | null) => void,
   ) {
-    this.xbee = new XBee(port, options, this.onReceiveObject, onOpen, onClose, onFailure, onError);
+    this.xbee = new XBee(port, options, this.onReceiveObject, onOpen, onClose, onError);
     this.vehicleId = vehicleId;
     this.outbox = new Map<number, Message.JSONMessage[]>();
     this.sending = new Map<number, Message.JSONMessage>();
@@ -231,7 +229,7 @@ export default class Messenger {
     if (config.vehicles[targetVehicleId] === undefined) {
       throw new Error('Provided target vehicle ID does not point to a valid vehicle');
     }
-    this.xbee.sendData(jsonMessage, config.vehicles[targetVehicleId].macAddress);
+    this.xbee.sendObject(jsonMessage, config.vehicles[targetVehicleId].macAddress);
 
     if (Message.isAcknowledgementMessage(message)
       || Message.isConnectionAcknowledgementMessage(message)
@@ -241,7 +239,7 @@ export default class Messenger {
 
     // Set interval to repeatedly send message until it is acknowledged
     this.sendingInterval.set(targetVehicleId, setInterval(() => {
-      this.xbee.sendData(jsonMessage, '');
+      this.xbee.sendObject(jsonMessage, '');
     }, config.messageSendRateMs));
 
     // Add handler to handle the event that this message is acknowledged

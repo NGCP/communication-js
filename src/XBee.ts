@@ -7,18 +7,15 @@ export default class XBee {
   private onReceiveObject: (obj: object) => void;
 
   /** Callback function when xbee port connection opens */
-  private onOpen?: () => void;
+  private onOpen: () => void;
 
   /** Callback function when xbee connection closes */
-  private onClose?: () => void;
-
-  /** Callback function when xbee connection fails to open/close */
-  private onFailure?: (error?: Error) => void;
+  private onClose: () => void;
 
   /** Callback function when xbee connection encounters an error */
-  private onError?: (error: Error) => void;
+  private onError: (error?: Error | null) => void;
 
-  private serialport: SerialPort;
+  serialport: SerialPort;
 
   private xbee: XBeeAPI.XBeeAPI;
 
@@ -30,7 +27,6 @@ export default class XBee {
    * @param onReceiveObject Callback function when xbee receives a non-null object
    * @param onOpen Callback function when xbee port connection opens
    * @param onClose Callback function when xbee connection closes
-   * @param onFailure Callback function when xbee connection fails to open/close
    * @param onError Callback function when xbee connection encounters an error
    */
   public constructor(
@@ -39,77 +35,93 @@ export default class XBee {
     onReceiveObject: (obj: object) => void,
     onOpen?: () => void,
     onClose?: () => void,
-    onFailure?: (error?: Error) => void,
-    onError?: (error: Error) => void,
+    onError?: (error?: Error | null) => void,
   ) {
     this.onReceiveObject = onReceiveObject;
-    this.onOpen = onOpen;
-    this.onClose = onClose;
-    this.onFailure = onFailure;
-    this.onError = onError;
+    this.onOpen = (): void => {
+      if (onOpen) {
+        onOpen();
+      }
+    };
+    this.onClose = (): void => {
+      if (onClose) {
+        onClose();
+      }
+    };
+    this.onError = (error): void => {
+      if (onError) {
+        onError(error);
+      }
+    };
 
     // Create port and bind xbee-api to it
-    this.serialport = new SerialPort(port, options, this.failureCallback);
+    this.serialport = new SerialPort(
+      port,
+      { autoOpen: true, baudRate: 57600, ...options },
+      (error) => {
+        if (error !== undefined && error !== null) {
+          this.onError(error);
+        }
+      },
+    );
     this.xbee = new XBeeAPI.XBeeAPI();
     this.serialport.pipe(this.xbee.parser);
     this.xbee.builder.pipe(this.serialport as NodeJS.WritableStream);
 
-    this.serialport.on('open', () => this.onOpen);
-    this.serialport.on('close', () => this.onClose);
-    this.serialport.on('error', (error: Error) => {
-      if (this.onError !== undefined) {
-        this.onError(error);
-      }
-    });
+    this.serialport.on('open', () => this.onOpen());
+    this.serialport.on('close', () => this.onClose());
+    this.serialport.on('error', (error) => this.onError(error));
 
     // Will only run onReceiveData function if the data received is a ZigBee receive packet
     // and is a valid MessagePack-encoded JSON
-    this.xbee.parser.on('data', (frame): void => {
+    this.xbee.parser.on('data', (frame: XBeeAPI.Frame): void => {
       if (frame.type === XBeeAPI.constants.FRAME_TYPE.ZIGBEE_RECEIVE_PACKET) {
-        try {
+        if (frame.data !== undefined) {
           const obj = JSON.parse(msgpack.decode(frame.data));
           if (typeof obj === 'object' && obj !== null) {
             this.onReceiveObject(obj);
           }
-        } catch (e) {
-          // eslint-disable-line no-empty
         }
       }
     });
   }
 
-  public openConnection(): boolean {
-    if (this.serialport.isOpen) return false;
-    this.serialport.open(this.failureCallback);
-    return true;
+  public openConnection(): void {
+    if (this.serialport.isOpen) {
+      this.onError(new Error('XBee connection already open'));
+      return;
+    }
+    this.serialport.open((error) => this.onError(error));
   }
 
-  public closeConnection(): boolean {
-    if (!this.serialport.isOpen) return false;
-    this.serialport.open(this.failureCallback);
-    return true;
+  public closeConnection(): void {
+    if (!this.serialport.isOpen) {
+      this.onError(new Error('XBee connection already close'));
+      return;
+    }
+    this.serialport.close((error) => this.onError(error));
   }
 
   /**
    * Sends JSON compressed using MessagePack https://msgpack.org/index.html
    * Sends packet as a ZigBee transmit request
    *
-   * @param data The object being sent, will be compressed with MessagePack
+   * @param obj The object being sent, will be compressed with MessagePack
    * @param address 64-bit MAC address of the XBee that the message is being sent to
+   * @returns generate frame from provided object and address
    */
-  public sendData(data: object, address: string): void {
-    if (!this.serialport.isOpen) return;
+  public sendObject(obj: object, address: string): XBeeAPI.Frame | undefined {
+    if (!this.serialport.isOpen) {
+      this.onError(new Error('XBee connection is not open'));
+      return undefined;
+    }
 
-    this.xbee.builder.write({
+    const frame: XBeeAPI.Frame = {
       type: XBeeAPI.constants.FRAME_TYPE.ZIGBEE_TRANSMIT_REQUEST,
       destination64: address,
-      data: msgpack.encode(JSON.stringify(data)),
-    });
-  }
+      data: msgpack.encode(JSON.stringify(obj)),
+    };
 
-  private failureCallback(error?: Error | null): void {
-    if (error && this.onFailure !== undefined) {
-      this.onFailure(error);
-    }
+    return this.xbee.builder.write(frame) ? frame : undefined;
   }
 }
