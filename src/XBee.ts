@@ -17,7 +17,7 @@ export default class XBee {
 
   serialport: SerialPort;
 
-  private xbee: XBeeAPI.XBeeAPI;
+  xbee: XBeeAPI.XBeeAPI;
 
   /**
    * Creates an instance of an xbee and opens connection.
