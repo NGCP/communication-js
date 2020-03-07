@@ -3,6 +3,7 @@ import MockBinding from '@serialport/binding-mock';
 import { assert } from 'chai';
 import { beforeEach, describe, it } from 'mocha';
 import msgpack from 'msgpack-lite';
+import sinon from 'sinon';
 import XBeeAPI from 'xbee-api';
 
 import XBee from '../src/XBee';
@@ -201,6 +202,21 @@ describe('XBee', () => {
           assert.isDefined(definedFrame.data, 'frame data is undefined');
           assert.equal(msgpack.decode(definedFrame.data as Buffer), JSON.stringify(obj));
           assert.equal(definedFrame.destination64, macAddress);
+          done();
+        }
+      };
+
+      xbee = new XBee(PORT, {}, emptyFunction, onOpen);
+    });
+
+    it('should return undefined if xbee fails to send data', (done) => {
+      const obj = { a: 'test', b: 2, c: false };
+      const macAddress = 'TEST';
+      const onOpen = (): void => {
+        if (xbee) {
+          sinon.stub(xbee.xbee.builder, 'write').returns(false);
+          const frame = xbee.sendObject(obj, macAddress);
+          assert.isUndefined(frame);
           done();
         }
       };
