@@ -71,19 +71,7 @@ export default class XBee {
     this.serialport.on('open', () => this.onOpen());
     this.serialport.on('close', () => this.onClose());
     this.serialport.on('error', (error) => this.onError(error));
-
-    // Will only run onReceiveData function if the data received is a ZigBee receive packet
-    // and is a valid MessagePack-encoded JSON
-    this.xbee.parser.on('data', (frame: XBeeAPI.Frame): void => {
-      if (frame.type === XBeeAPI.constants.FRAME_TYPE.ZIGBEE_RECEIVE_PACKET) {
-        if (frame.data !== undefined) {
-          const obj = JSON.parse(msgpack.decode(frame.data));
-          if (typeof obj === 'object' && obj !== null) {
-            this.onReceiveObject(obj);
-          }
-        }
-      }
-    });
+    this.xbee.parser.on('data', (frame) => this.onReceiveFrame(frame));
   }
 
   public openConnection(): void {
@@ -123,5 +111,27 @@ export default class XBee {
     };
 
     return this.xbee.builder.write(frame) ? frame : undefined;
+  }
+
+  /**
+   * Invoked when something is received on our xbee's end. Will only run provided onReceiveData
+   * function if the data received is a ZigBee receive packet and is a valid MessagePack-encoded
+   * JSON
+   */
+  onReceiveFrame(frame: XBeeAPI.Frame): object | undefined {
+    if (frame.type === XBeeAPI.constants.FRAME_TYPE.ZIGBEE_RECEIVE_PACKET) {
+      if (frame.data !== undefined) {
+        try {
+          const obj = JSON.parse(msgpack.decode(frame.data));
+          if (typeof obj === 'object') {
+            this.onReceiveObject(obj);
+            return obj;
+          }
+        } catch (e) {
+          return undefined;
+        }
+      }
+    }
+    return undefined;
   }
 }

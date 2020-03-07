@@ -224,4 +224,59 @@ describe('XBee', () => {
       xbee = new XBee(PORT, {}, emptyFunction, onOpen);
     });
   });
+
+  describe('#onReceiveFrame()', () => {
+    it('should return obj for frames with valid data', () => {
+      xbee = new XBee(PORT, {}, emptyFunction);
+      const obj = { a: 1 };
+      const obj2 = xbee.onReceiveFrame({
+        type: XBeeAPI.constants.FRAME_TYPE.ZIGBEE_RECEIVE_PACKET,
+        data: msgpack.encode(JSON.stringify(obj)),
+      });
+
+      assert.deepEqual(obj, obj2);
+    });
+
+    it('should return undefined for empty frames', () => {
+      xbee = new XBee(PORT, {}, emptyFunction);
+      assert.isUndefined(xbee.onReceiveFrame({}));
+    });
+
+    it('should return undefined for frames with wrong type', () => {
+      xbee = new XBee(PORT, {}, emptyFunction);
+      assert.isUndefined(xbee.onReceiveFrame({}));
+      assert.isUndefined(xbee.onReceiveFrame({ type: 0 }));
+    });
+
+    it('should return undefined for frames with no data', () => {
+      xbee = new XBee(PORT, {}, emptyFunction);
+      assert.isUndefined(xbee.onReceiveFrame({
+        type: XBeeAPI.constants.FRAME_TYPE.ZIGBEE_RECEIVE_PACKET,
+      }));
+    });
+
+    it('should return undefined for frames with invalid data', () => {
+      xbee = new XBee(PORT, {}, emptyFunction);
+      assert.isUndefined(xbee.onReceiveFrame({
+        type: XBeeAPI.constants.FRAME_TYPE.ZIGBEE_RECEIVE_PACKET,
+        data: 10 as unknown as Buffer,
+      }));
+      assert.isUndefined(xbee.onReceiveFrame({
+        type: XBeeAPI.constants.FRAME_TYPE.ZIGBEE_RECEIVE_PACKET,
+        data: Buffer.from([0x10]),
+      }));
+      assert.isUndefined(xbee.onReceiveFrame({
+        type: XBeeAPI.constants.FRAME_TYPE.ZIGBEE_RECEIVE_PACKET,
+        data: Buffer.from(JSON.stringify({ a: 1 })),
+      }));
+      assert.isUndefined(xbee.onReceiveFrame({
+        type: XBeeAPI.constants.FRAME_TYPE.ZIGBEE_RECEIVE_PACKET,
+        data: null as unknown as Buffer,
+      }));
+      assert.isUndefined(xbee.onReceiveFrame({
+        type: XBeeAPI.constants.FRAME_TYPE.ZIGBEE_RECEIVE_PACKET,
+        data: msgpack.encode({ a: 1 }),
+      }));
+    });
+  });
 });
