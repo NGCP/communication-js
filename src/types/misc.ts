@@ -35,7 +35,7 @@ export type MessageType = 'start' | 'addMission' | 'pause' | 'resume' | 'stop' |
 
 /** Type guard for MessageType */
 export function isMessageType(type: string): type is MessageType {
-  return type === 'string' || type === 'addMission' || type === 'pause' || type === 'resume'
+  return type === 'start' || type === 'addMission' || type === 'pause' || type === 'resume'
     || type === 'stop' || type === 'connectionAck' || type === 'update' || type === 'poi'
     || type === 'complete' || type === 'connect' || type === 'ack' || type === 'badMessage';
 }
