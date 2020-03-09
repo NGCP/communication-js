@@ -1,33 +1,36 @@
 import SerialPort from '@serialport/stream';
 import MockBinding from '@serialport/binding-mock';
 import { assert } from 'chai';
-import { beforeEach, describe, it } from 'mocha';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  it,
+} from 'mocha';
 import msgpack from 'msgpack-lite';
 import sinon from 'sinon';
 import XBeeAPI from 'xbee-api';
 
 import XBee from '../src/XBee';
 
-// SerialPort.Binding = new MockBinding({});
-// MockBinding.createPort('TEST', { echo: true, record: true });
-
-let xbee: XBee | undefined;
-
 const PORT = 'PORT';
-
-SerialPort.Binding = MockBinding as unknown as SerialPort.BaseBinding;
-MockBinding.createPort(PORT, {});
 
 function emptyFunction(): void { // eslint-disable @typescript-eslint/no-empty-function
 }
 
+let xbee: XBee | undefined;
+
+SerialPort.Binding = MockBinding as unknown as SerialPort.BaseBinding;
+MockBinding.createPort(PORT, {});
+
 describe('XBee', () => {
   beforeEach(() => {
-    if (xbee) {
-      if (xbee.serialport.isOpen) {
-        xbee.serialport.close();
-      }
-      xbee = undefined;
+    xbee = undefined;
+  });
+
+  afterEach(() => {
+    if (xbee !== undefined && xbee.serialport.isOpen) {
+      xbee.serialport.close();
     }
   });
 
