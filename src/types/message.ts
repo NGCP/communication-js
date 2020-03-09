@@ -1,8 +1,10 @@
 /**
  * Type declaration for all message between GCS and vehicles. See the following URL for the
  * list of messages:
- * https://ground-control-station.readthedocs.io/en/latest/communications/messages.html
+ * https://ground-control-station.readthedocs.io/en/latest/communications/messages/base-message/
  */
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as Misc from './misc';
 import * as Task from './task';
@@ -12,6 +14,7 @@ interface MessageTypeBase {
 }
 
 // Definitions for all messages from GCS to vehicles.
+// https://ground-control-station.readthedocs.io/en/latest/communications/messages/gcs-vehicles-messages/
 
 export interface StartMessage extends MessageTypeBase {
   type: 'start';
@@ -19,9 +22,8 @@ export interface StartMessage extends MessageTypeBase {
 }
 
 /** Type guard for StartMessage */
-export function isStartMessage(message: Message): message is StartMessage {
-  return message.type === 'start'
-    && Misc.isJobType(message.jobType);
+export function isStartMessage(obj: { [key: string]: any }): obj is StartMessage {
+  return obj.type === 'start' && Misc.isJobType(obj.jobType);
 }
 
 export interface AddMissionMessage extends MessageTypeBase {
@@ -30,9 +32,9 @@ export interface AddMissionMessage extends MessageTypeBase {
 }
 
 /** Type guard for AddMissionMessage */
-export function isAddMissionMessage(message: Message): message is AddMissionMessage {
-  return message.type === 'addMission'
-    && message.missionInfo && Misc.isTaskType(message.missionInfo.taskType);
+export function isAddMissionMessage(obj: { [key: string]: any }): obj is AddMissionMessage {
+  return obj.type === 'addMission'
+    && obj.missionInfo !== undefined && Misc.isTaskType(obj.missionInfo.taskType);
 }
 
 export interface PauseMessage extends MessageTypeBase {
@@ -40,8 +42,8 @@ export interface PauseMessage extends MessageTypeBase {
 }
 
 /** Type guard for PauseMessage */
-export function isPauseMessage(message: Message): message is PauseMessage {
-  return message.type === 'pause';
+export function isPauseMessage(obj: { [key: string]: any }): obj is PauseMessage {
+  return obj.type === 'pause';
 }
 
 export interface ResumeMessage extends MessageTypeBase {
@@ -49,8 +51,8 @@ export interface ResumeMessage extends MessageTypeBase {
 }
 
 /** Type guard for ResumeMessage */
-export function isResumeMessage(message: Message): message is ResumeMessage {
-  return message.type === 'resume';
+export function isResumeMessage(obj: { [key: string]: any }): obj is ResumeMessage {
+  return obj.type === 'resume';
 }
 
 export interface StopMessage extends MessageTypeBase {
@@ -58,8 +60,8 @@ export interface StopMessage extends MessageTypeBase {
 }
 
 /** Type guard for StopMessage */
-export function isStopMessage(message: Message): message is StopMessage {
-  return message.type === 'stop';
+export function isStopMessage(obj: { [key: string]: any }): obj is StopMessage {
+  return obj.type === 'stop';
 }
 
 export interface ConnectionAcknowledgementMessage extends MessageTypeBase {
@@ -68,12 +70,13 @@ export interface ConnectionAcknowledgementMessage extends MessageTypeBase {
 
 /** Type guard for ConnectionAckMessage */
 export function isConnectionAcknowledgementMessage(
-  message: Message,
-): message is ConnectionAcknowledgementMessage {
-  return message.type === 'connectionAck';
+  obj: { [key: string]: any },
+): obj is ConnectionAcknowledgementMessage {
+  return obj.type === 'connectionAck';
 }
 
 // Definitions for all messages from vehicles to GCS.
+// https://ground-control-station.readthedocs.io/en/latest/communications/messages/vehicles-gcs-messages/
 
 export interface UpdateMessage extends MessageTypeBase {
   type: 'update';
@@ -87,17 +90,24 @@ export interface UpdateMessage extends MessageTypeBase {
 }
 
 /** Type guard for UpdateMessage */
-export function isUpdateMessage(message: Message): message is UpdateMessage {
-  const mandatoryCheck = message.type === 'update'
-    && Number.isFinite(message.lat)
-    && Number.isFinite(message.lng);
+export function isUpdateMessage(obj: { [key: string]: any }): obj is UpdateMessage {
+  if (obj.type !== 'update'
+    || !Number.isFinite(obj.lat)
+    || !Number.isFinite(obj.lng)
+    || !Misc.isVehicleStatus(obj.status)) {
+    return false;
+  }
 
-  if (!mandatoryCheck) return false;
-
-  const updateMessage = message as UpdateMessage;
-  if (updateMessage.alt && !Number.isFinite(updateMessage.alt)) return false;
-  if (updateMessage.heading && !Number.isFinite(updateMessage.heading)) return false;
-  if (updateMessage.battery && !Number.isFinite(updateMessage.battery)) return false;
+  // optional fields
+  if (obj.alt !== undefined && !Number.isFinite(obj.alt)) {
+    return false;
+  }
+  if (obj.heading !== undefined && !Number.isFinite(obj.heading)) {
+    return false;
+  }
+  if (obj.battery !== undefined && !Number.isFinite(obj.battery)) {
+    return false;
+  }
 
   return true;
 }
@@ -109,8 +119,8 @@ export interface POIMessage extends MessageTypeBase {
 }
 
 /** Type guard for POIMessage */
-export function isPOIMessage(message: Message): message is POIMessage {
-  return message.type === 'poi' && Number.isFinite(message.lat) && Number.isFinite(message.lng);
+export function isPOIMessage(obj: { [key: string]: any }): obj is POIMessage {
+  return obj.type === 'poi' && Number.isFinite(obj.lat) && Number.isFinite(obj.lng);
 }
 
 export interface CompleteMessage extends MessageTypeBase {
@@ -118,8 +128,8 @@ export interface CompleteMessage extends MessageTypeBase {
 }
 
 /** Type guard for CompleteMessage */
-export function isCompleteMessage(message: Message): message is CompleteMessage {
-  return message.type === 'complete';
+export function isCompleteMessage(obj: { [key: string]: any }): obj is CompleteMessage {
+  return obj.type === 'complete';
 }
 
 export interface ConnectMessage extends MessageTypeBase {
@@ -128,12 +138,13 @@ export interface ConnectMessage extends MessageTypeBase {
 }
 
 /** Type guard for ConnectMessage */
-export function isConnectMessage(message: Message): message is ConnectMessage {
-  return message.type === 'connect' && message.jobsAvailable.every(Misc.isJobType);
+export function isConnectMessage(obj: { [key: string]: any }): obj is ConnectMessage {
+  return obj.type === 'connect'
+    && Array.isArray(obj.jobsAvailable) && obj.jobsAvailable.every(Misc.isJobType);
 }
 
 // Definitions for all other message types. Sent between GCS and vehicles.
-// Needs type guards since not all of these messages are from GCS and possibly could be invalid.
+// https://ground-control-station.readthedocs.io/en/latest/communications/messages/other-messages/
 
 export interface AcknowledgementMessage extends MessageTypeBase {
   type: 'ack';
@@ -141,8 +152,10 @@ export interface AcknowledgementMessage extends MessageTypeBase {
 }
 
 /** Type guard for AcknowledgementMessage */
-export function isAcknowledgementMessage(message: Message): message is AcknowledgementMessage {
-  return message.type === 'ack' && Number.isInteger(message.ackid);
+export function isAcknowledgementMessage(
+  obj: { [key: string]: any },
+): obj is AcknowledgementMessage {
+  return obj.type === 'ack' && Number.isInteger(obj.ackid);
 }
 
 export interface BadMessage extends MessageTypeBase {
@@ -151,13 +164,33 @@ export interface BadMessage extends MessageTypeBase {
 }
 
 /** Type guard for BadMessage */
-export function isBadMessage(message: Message): message is BadMessage {
-  return message.type === 'badMessage';
+export function isBadMessage(obj: { [key: string]: any }): obj is BadMessage {
+  return obj.type === 'badMessage';
 }
 
 export type Message = StartMessage | AddMissionMessage | PauseMessage | ResumeMessage | StopMessage
 | ConnectionAcknowledgementMessage | UpdateMessage | POIMessage | CompleteMessage | ConnectMessage
 | AcknowledgementMessage | BadMessage;
+
+/** Type guard for a Message */
+export function isMessage(obj: { [key: string]: any }): obj is Message {
+  if (!Misc.isMessageType(obj.type)) {
+    return false;
+  }
+
+  return isStartMessage(obj)
+    || isAddMissionMessage(obj)
+    || isPauseMessage(obj)
+    || isResumeMessage(obj)
+    || isStopMessage(obj)
+    || isConnectionAcknowledgementMessage(obj)
+    || isUpdateMessage(obj)
+    || isPOIMessage(obj)
+    || isCompleteMessage(obj)
+    || isConnectMessage(obj)
+    || isAcknowledgementMessage(obj)
+    || isBadMessage(obj);
+}
 
 /** Same as a Message, but has the required id, tid, sid, time fields. */
 export type JSONMessage = Message & {
@@ -167,27 +200,11 @@ export type JSONMessage = Message & {
   time: number;
 };
 
-/** Type guard for a JSON Message, only checks for required id, tid, sid, time, and type fields */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isJSONMessage(object: { [key: string]: any }): object is JSONMessage {
-  if (!object.type || !Misc.isMessageType(object.type)) return false;
-
-  const message = object as JSONMessage;
-  if (!Number.isInteger(message.id) || !Number.isInteger(message.tid)
-    || !Number.isInteger(message.sid) || !Number.isInteger(message.time)) {
-    return false;
-  }
-
-  return isStartMessage(message)
-    || isAddMissionMessage(message)
-    || isPauseMessage(message)
-    || isResumeMessage(message)
-    || isStopMessage(message)
-    || isConnectionAcknowledgementMessage(message)
-    || isUpdateMessage(message)
-    || isPOIMessage(message)
-    || isCompleteMessage(message)
-    || isConnectMessage(message)
-    || isAcknowledgementMessage(message)
-    || isBadMessage(message);
+/** Type guard for a JSON Message */
+export function isJSONMessage(obj: { [key: string]: any }): obj is JSONMessage {
+  return Number.isInteger(obj.id)
+    && Number.isInteger(obj.tid)
+    && Number.isInteger(obj.sid)
+    && Number.isInteger(obj.time)
+    && isMessage(obj);
 }
