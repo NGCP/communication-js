@@ -48,11 +48,7 @@ describe('UpdateHandler', () => {
 
       setTimeout(() => {
         assert.equal(counter, 1, `counter should be 1 after handler expires, is ${counter}`);
-        assert.deepEqual(
-          updateHandler.handlers.get('status'),
-          [],
-          `array in "status" is not empty, is ${updateHandler.handlers.get('status')}`,
-        );
+        assert.isUndefined(updateHandler.handlers.get('status'));
         done();
       }, 20);
     });
@@ -301,13 +297,58 @@ describe('UpdateHandler', () => {
 
       setTimeout(() => {
         assert.equal(counter, 0, `counter should be 0 since expiry did not run, is ${counter}`);
-        assert.deepEqual(
-          updateHandler.handlers.get('status'),
-          [],
-          `array in "status" is not empty, is ${updateHandler.handlers.get('status')}`,
-        );
+        assert.isUndefined(updateHandler.handlers.get('status'));
         done();
       }, 20);
+    });
+
+    it('should delete the event if no more handlers exist for it', () => {
+      const handler = updateHandler.addHandler<number>(
+        'status', () => { counter += 1; }, (v) => v === 10,
+      );
+      assert.equal(updateHandler.handlers.size, 1);
+
+      handler.remove();
+      assert.equal(updateHandler.handlers.size, 0);
+    });
+
+    it('should not delete the event if more handlers exist for it', () => {
+      const handler = updateHandler.addHandler<number>(
+        'status', () => { counter += 1; }, (v) => v === 10,
+      );
+      const handler2 = updateHandler.addHandler<number>(
+        'status', () => { counter += 2; }, (v) => v === 20,
+      );
+      assert.equal(updateHandler.handlers.size, 1);
+
+      handler.remove();
+      assert.equal(updateHandler.handlers.size, 1);
+      assert.deepEqual(updateHandler.handlers.get('status'), [handler2]);
+    });
+
+    it('should throw error if handler for non-existing event is deleted', () => {
+      const handler = updateHandler.addHandler<number>(
+        'status', () => { counter += 1; }, (v) => v === 10,
+      );
+      assert.equal(updateHandler.handlers.size, 1);
+
+      updateHandler.handlers.delete('status');
+      assert.equal(updateHandler.handlers.size, 0);
+
+      assert.throws(
+        () => handler.remove(),
+        Error,
+        'Tried removing a handler for an event that does not exist',
+      );
+    });
+  });
+
+  describe('#clearHandlers()', () => {
+    it('should remove all existing handlers', () => {
+      updateHandler.addHandler<number>('status', () => { counter += 1; }, (v) => v === 10);
+      assert.equal(updateHandler.handlers.size, 1);
+      updateHandler.clearHandlers();
+      assert.equal(updateHandler.handlers.size, 0);
     });
   });
 });
