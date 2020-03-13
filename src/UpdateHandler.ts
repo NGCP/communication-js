@@ -52,19 +52,14 @@ export default class UpdateHandler {
 
     if (expirationTime !== undefined) {
       handler.expiry = setTimeout(() => {
-        // Deletes the handler when it expires
-        const currentHandlers = this.handlers.get(eventName) || [];
-        this.handlers.set(eventName, currentHandlers.filter(
-          (lis): boolean => lis !== handler,
-        ));
-
+        // Deletes the handler when it expires then runs callback onExpire function
+        handler.remove();
         if (onExpire !== undefined) {
           onExpire();
         }
       }, expirationTime);
     }
 
-    // Adds the handler to the list with the proper event name.
     const currentHandlers = this.handlers.get(eventName) || [];
     currentHandlers.push(handler);
     this.handlers.set(eventName, currentHandlers);
@@ -81,16 +76,24 @@ export default class UpdateHandler {
    * @param options Extra information about the event.
    */
   public processEvent<T>(eventName: string, value: T, options?: object): void {
-    const currentHandlers = this.handlers.get(eventName) || [];
-    this.handlers.set(eventName, currentHandlers.filter((handler) => {
-      handler.onEvent(value, options);
+    const currentHandlers = this.handlers.get(eventName);
+    if (currentHandlers === undefined) {
+      return;
+    }
 
-      const shouldRemoveHandler = handler.shouldRemove(value, options);
-      if (shouldRemoveHandler && handler.expiry !== undefined) {
-        clearTimeout(handler.expiry);
+    currentHandlers.forEach((handler) => {
+      handler.onEvent(value, options);
+      if (handler.shouldRemove(value, options)) {
+        handler.remove();
       }
-      return !shouldRemoveHandler;
-    }));
+    });
+  }
+
+  /** Removes all existing handlers */
+  public clearHandlers(): void {
+    this.handlers.forEach((handlers) => {
+      handlers.forEach((handler) => handler.remove());
+    });
   }
 
   /**
@@ -105,8 +108,16 @@ export default class UpdateHandler {
       clearTimeout(handler.expiry);
     }
 
-    // Removes the handler from the event's list of handlers.
-    const currentHandlers = this.handlers.get(eventName) || [];
-    this.handlers.set(eventName, currentHandlers.filter((h) => handler !== h));
+    const currentHandlers = this.handlers.get(eventName);
+    if (currentHandlers === undefined) {
+      throw new Error('Tried removing a handler for an event that does not exist');
+    }
+
+    const newHandlers = currentHandlers.filter((h) => handler !== h);
+    if (newHandlers.length === 0) {
+      this.handlers.delete(eventName);
+    } else {
+      this.handlers.set(eventName, newHandlers);
+    }
   }
 }
