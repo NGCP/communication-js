@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-interface Handler<T> {
+export interface Handler<T> {
   /** Callback function when an event occurs. */
   onEvent: (value: T, options?: object) => void;
 
