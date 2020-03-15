@@ -16,6 +16,17 @@ interface MessageTypeBase {
 // Definitions for all messages from GCS to vehicles.
 // https://ground-control-station.readthedocs.io/en/latest/communications/messages/gcs-vehicles-messages/
 
+export interface ConnectionAcknowledgementMessage extends MessageTypeBase {
+  type: 'connectionAck';
+}
+
+/** Type guard for ConnectionAckMessage */
+export function isConnectionAcknowledgementMessage(
+  obj: { [key: string]: any },
+): obj is ConnectionAcknowledgementMessage {
+  return obj.type === 'connectionAck';
+}
+
 export interface StartMessage extends MessageTypeBase {
   type: 'start';
   jobType: Misc.JobType;
@@ -62,17 +73,6 @@ export interface StopMessage extends MessageTypeBase {
 /** Type guard for StopMessage */
 export function isStopMessage(obj: { [key: string]: any }): obj is StopMessage {
   return obj.type === 'stop';
-}
-
-export interface ConnectionAcknowledgementMessage extends MessageTypeBase {
-  type: 'connectionAck';
-}
-
-/** Type guard for ConnectionAckMessage */
-export function isConnectionAcknowledgementMessage(
-  obj: { [key: string]: any },
-): obj is ConnectionAcknowledgementMessage {
-  return obj.type === 'connectionAck';
 }
 
 // Definitions for all messages from vehicles to GCS.
