@@ -7,47 +7,51 @@ import UpdateHandler from './UpdateHandler';
 import XBee from './XBee';
 
 export default class Messenger {
-  private static generateHash(targetVehicleId: number, messageId: number): string {
+  static generateHash(targetVehicleId: number, messageId: number): string {
     return `${targetVehicleId}#${messageId}`;
   }
 
   /** Xbee object to send and receive messages from */
-  private xbee: XBee;
+  xbee: XBee;
 
   /** ID of the vehicle this Messager is running in */
   private vehicleId: number;
 
   /** Array of messages mapped by vehicle id to send them to */
-  private outbox: Map<number, Message.Message[]>;
+  outbox: Map<number, Message.Message[]>;
 
   /** Current json message being send to the vehicle mapped by vehicle id */
-  private sending: Map<number, Message.JSONMessage>;
+  sending: Map<number, Message.JSONMessage>;
 
   /** Interval function that keeps sending message repeatedly mapped by vehicle id */
-  private sendingInterval: Map<number, NodeJS.Timeout>;
+  sendingInterval: Map<number, NodeJS.Timeout>;
 
   /** ID of message being sent */
   private sendingMessageId: number;
 
   /** Takes care of events of messages being acknowledged and properly stops sending them */
-  private updateHandler: UpdateHandler;
+  updateHandler: UpdateHandler;
 
   // The following are all the public fields that could be set when adding a Messenger
 
+  /** Callback when connection acknowledgment message is received */
+  public onConnectionAcknowledgementMessage?:
+  (message: Message.ConnectionAcknowledgementMessage) => void;
+
   /** Callback when start message is received */
-  public onStartMessage?: (message: Message.StartMessage) => boolean;
+  public onStartMessage?: (message: Message.StartMessage) => void;
 
   /** Callback when add mission message is received */
-  public onAddMissionMessage?: (message: Message.AddMissionMessage) => boolean;
+  public onAddMissionMessage?: (message: Message.AddMissionMessage) => void;
 
   /** Callback when pause message is received */
-  public onPauseMessage?: (message: Message.PauseMessage) => boolean;
+  public onPauseMessage?: (message: Message.PauseMessage) => void;
 
   /** Callback when resume message is received */
-  public onResumeMessage?: (message: Message.ResumeMessage) => boolean;
+  public onResumeMessage?: (message: Message.ResumeMessage) => void;
 
   /** Callback when stop message is received */
-  public onStopMessage?: (message: Message.StopMessage) => boolean;
+  public onStopMessage?: (message: Message.StopMessage) => void;
 
   /** Callback when update message is received */
   public onUpdateMessage?: (message: Message.UpdateMessage) => void;
@@ -96,9 +100,9 @@ export default class Messenger {
   ) {
     this.xbee = new XBee(port, options, this.onReceiveObject, onOpen, onClose, onError);
     this.vehicleId = vehicleId;
-    this.outbox = new Map<number, Message.JSONMessage[]>();
-    this.sending = new Map<number, Message.JSONMessage>();
-    this.sendingInterval = new Map<number, NodeJS.Timeout>();
+    this.outbox = new Map();
+    this.sending = new Map();
+    this.sendingInterval = new Map();
     this.sendingMessageId = 0;
     this.updateHandler = new UpdateHandler();
   }
@@ -135,15 +139,23 @@ export default class Messenger {
     });
   }
 
+  public sendStopMessage(targetVehicleId: number): void {
+    this.sendMessage(targetVehicleId, {
+      type: 'stop',
+    });
+  }
+
   public sendUpdateMessage(
     targetVehicleId: number,
     lat: number,
     lng: number,
     status: Misc.VehicleStatus,
-    alt?: number,
-    heading?: number,
-    battery?: number,
-    errorMessage?: string,
+    extras?: {
+      alt?: number;
+      heading?: number;
+      battery?: number;
+      errorMessage?: string;
+    },
   ): void {
     const updateMessage: Message.UpdateMessage = {
       type: 'update',
@@ -151,17 +163,19 @@ export default class Messenger {
       lng,
       status,
     };
-    if (alt !== undefined) {
-      updateMessage.alt = alt;
-    }
-    if (heading !== undefined) {
-      updateMessage.heading = heading;
-    }
-    if (battery !== undefined) {
-      updateMessage.battery = battery;
-    }
-    if (errorMessage !== undefined) {
-      updateMessage.errorMessage = errorMessage;
+    if (extras !== undefined) {
+      if (extras.alt !== undefined) {
+        updateMessage.alt = extras.alt;
+      }
+      if (extras.heading !== undefined) {
+        updateMessage.heading = extras.heading;
+      }
+      if (extras.battery !== undefined) {
+        updateMessage.battery = extras.battery;
+      }
+      if (extras.errorMessage !== undefined) {
+        updateMessage.errorMessage = extras.errorMessage;
+      }
     }
 
     this.sendMessage(targetVehicleId, updateMessage);
@@ -206,7 +220,7 @@ export default class Messenger {
     this.sendMessage(targetVehicleId, badMessage);
   }
 
-  private sendMessage(targetVehicleId: number, message: Message.Message): void {
+  sendMessage(targetVehicleId: number, message: Message.Message): void {
     // If Messenger is currently sending a message to the target vehicle, add this message to
     // the outbox and then exit
     if (this.sending.get(targetVehicleId) !== undefined) {
@@ -231,15 +245,15 @@ export default class Messenger {
     }
     this.xbee.sendObject(jsonMessage, config.vehicles[targetVehicleId].macAddress);
 
-    if (Message.isAcknowledgementMessage(message)
-      || Message.isConnectionAcknowledgementMessage(message)
-      || Message.isBadMessage(message)) {
+    if (Message.isAcknowledgementMessage(jsonMessage)
+      || Message.isBadMessage(jsonMessage)) {
       return;
     }
 
     // Set interval to repeatedly send message until it is acknowledged
+    this.sending.set(targetVehicleId, jsonMessage);
     this.sendingInterval.set(targetVehicleId, setInterval(() => {
-      this.xbee.sendObject(jsonMessage, '');
+      this.xbee.sendObject(jsonMessage, config.vehicles[targetVehicleId].macAddress);
     }, config.messageSendRateMs));
 
     // Add handler to handle the event that this message is acknowledged
@@ -256,20 +270,27 @@ export default class Messenger {
     );
   }
 
-  private onReceiveObject(obj: object): void {
-    if (!Message.isJSONMessage(obj)) {
-      if ('sid' in obj) {
-        this.sendBadMessage(
-          (obj as Message.JSONMessage).sid,
-          `Invalid message received: ${JSON.stringify(obj)}`,
-        );
-      }
+  public stopSendingMessages(): void {
+    this.sendingInterval.forEach((interval) => {
+      clearInterval(interval);
+    });
+    this.sendingInterval = new Map();
+    this.updateHandler.clearHandlers();
+  }
+
+  onReceiveObject(obj: object): void {
+    if (!Message.isJSONMessage(obj)
+      || obj.tid !== this.vehicleId
+      || config.vehicles[obj.sid] === undefined) {
       this.processReceiveInvalidObject(obj);
       return;
     }
 
     switch (obj.type) {
       case 'connectionAck': {
+        if (this.onConnectionAcknowledgementMessage !== undefined) {
+          this.onConnectionAcknowledgementMessage(obj);
+        }
         this.sendAcknowledgementMessage(obj.sid, obj.id);
         break;
       }
@@ -347,11 +368,22 @@ export default class Messenger {
         }
         break;
       }
-      default: break;
+      default: {
+        throw new Error(`Received an unsupported message ${JSON.stringify(obj)}`);
+      }
     }
   }
 
   private processReceiveInvalidObject(obj: object): void {
+    // Try to see if we can send a bad message back
+    const { sid } = (obj as Message.JSONMessage);
+    if (Number.isInteger(sid) && config.vehicles[sid] !== undefined) {
+      this.sendBadMessage(
+        (obj as Message.JSONMessage).sid,
+        `Invalid message received: ${JSON.stringify(obj)}`,
+      );
+    }
+
     if (this.onReceiveInvalidObject) {
       this.onReceiveInvalidObject(obj);
     }
@@ -359,17 +391,25 @@ export default class Messenger {
 
   private processAcknowledgement(targetVehicleId: number): void {
     clearInterval(this.sendingInterval.get(targetVehicleId) as NodeJS.Timeout);
+    this.sendingInterval.delete(targetVehicleId);
     this.sending.delete(targetVehicleId);
 
     // Send next message to vehicle if its outbox is not empty
-    const vehicleOutbox = this.outbox.get(targetVehicleId) || [];
-    let nextMessage;
-    if (vehicleOutbox.length > 0) {
-      nextMessage = vehicleOutbox.shift();
+    const vehicleOutbox = this.outbox.get(targetVehicleId);
+    if (vehicleOutbox === undefined) {
+      return;
     }
-    this.outbox.set(targetVehicleId, vehicleOutbox);
-    if (nextMessage !== undefined) {
-      this.sendMessage(targetVehicleId, nextMessage);
+
+    const nextMessage = vehicleOutbox.shift();
+    if (nextMessage === undefined) {
+      throw new Error('Obtained message in outbox that is undefined');
     }
+
+    if (vehicleOutbox.length === 0) {
+      this.outbox.delete(targetVehicleId);
+    } else {
+      this.outbox.set(targetVehicleId, vehicleOutbox);
+    }
+    this.sendMessage(targetVehicleId, nextMessage);
   }
 }
