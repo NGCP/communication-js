@@ -1,11 +1,17 @@
-/** Amount of time before a vehicle disconnects if it receives no messages from the other */
-export const disconnectionTimeMs = 20000;
+/* eslint-disable @typescript-eslint/no-inferrable-types */
+
+/**
+ * Amount of time before a vehicle disconnects if it receives no messages from the other. If a
+ * message is sent exactly at the time the vehicle should disconnect, the vehicle does not receive
+ * the message and still disconnects
+ */
+export const disconnectionTimeMs: number = 20000;
 
 /**
  * Amount of time before a message that requires acknowledgement is sent again if it is not
  * acknowledged
  */
-export const messageSendRateMs = 10000;
+export const messageSendRateMs: number = 10000;
 
 /** Map of vehicles' ID to their information */
 export const vehicles: {
