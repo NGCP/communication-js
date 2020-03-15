@@ -103,6 +103,12 @@ export default class Messenger {
     this.updateHandler = new UpdateHandler();
   }
 
+  public sendConnectionAcknowledgementMessage(targetVehicleId: number): void {
+    this.sendMessage(targetVehicleId, {
+      type: 'connectionAck',
+    });
+  }
+
   public sendStartMessage(targetVehicleId: number, jobType: Misc.JobType): void {
     this.sendMessage(targetVehicleId, {
       type: 'start',
@@ -126,12 +132,6 @@ export default class Messenger {
   public sendResumeMessage(targetVehicleId: number): void {
     this.sendMessage(targetVehicleId, {
       type: 'resume',
-    });
-  }
-
-  public sendConnectionAcknowledgementMessage(targetVehicleId: number): void {
-    this.sendMessage(targetVehicleId, {
-      type: 'connectionAck',
     });
   }
 
@@ -269,6 +269,10 @@ export default class Messenger {
     }
 
     switch (obj.type) {
+      case 'connectionAck': {
+        this.sendAcknowledgementMessage(obj.sid, obj.id);
+        break;
+      }
       case 'start': {
         if (this.onStartMessage !== undefined) {
           this.onStartMessage(obj);
@@ -301,10 +305,6 @@ export default class Messenger {
         if (this.onStopMessage !== undefined) {
           this.onStopMessage(obj);
         }
-        this.sendAcknowledgementMessage(obj.sid, obj.id);
-        break;
-      }
-      case 'connectionAck': {
         this.sendAcknowledgementMessage(obj.sid, obj.id);
         break;
       }
