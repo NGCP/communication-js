@@ -1,6 +1,6 @@
 {
   "name": "ngcp-communication-js",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "license": "MIT",
   "author": "Northrop Grumman Collaboration Project",
   "description": "JSON-based communication for JavaScript in Node.js",
