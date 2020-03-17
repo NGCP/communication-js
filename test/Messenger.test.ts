@@ -114,7 +114,7 @@ describe('Messenger', () => {
   });
 
   beforeEach(() => {
-    messenger = new Messenger(PORT, SOURCE_VEHICLE_ID, {});
+    messenger = new Messenger(PORT, SOURCE_VEHICLE_ID);
 
     // Spy on any calls to certain functions
     xbeeSendObjectSpy = sinon.spy(messenger.xbee, 'sendObject');

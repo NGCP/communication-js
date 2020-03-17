@@ -32,7 +32,7 @@ export default class UpdateHandler {
    * @param eventName Name of the event to look out for.
    * @param onEvent Callback function when the handler sees event happening.
    * @param shouldRemove Callback function to determine if handler should be removed.
-   * @param expirationTime Amount of time for the handler to expire.
+   * @param expirationTime Amount of time for the handler to expire, in milliseconds.
    * @param onExpire Callback function when handler expires.
    * @returns The handler created. Normally never need to access the handler itself unless it
    *          needs to be manually removed using the handler.remove() function.
