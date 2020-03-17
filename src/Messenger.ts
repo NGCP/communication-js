@@ -93,12 +93,12 @@ export default class Messenger {
   public constructor(
     port: string,
     vehicleId: number,
-    options: SerialPort.OpenOptions,
+    options?: SerialPort.OpenOptions,
     onOpen?: () => void,
     onClose?: () => void,
     onError?: (error?: Error | null) => void,
   ) {
-    this.xbee = new XBee(port, options, this.onReceiveObject, onOpen, onClose, onError);
+    this.xbee = new XBee(port, options || {}, this.onReceiveObject, onOpen, onClose, onError);
     this.vehicleId = vehicleId;
     this.outbox = new Map();
     this.sending = new Map();

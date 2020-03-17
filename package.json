@@ -1,16 +1,17 @@
 {
-  "name": "communication-js",
+  "name": "ngcp-communication-js",
   "version": "0.2.1",
   "license": "MIT",
   "author": "Northrop Grumman Collaboration Project",
   "description": "JSON-based communication for JavaScript in Node.js",
   "repository": "https://github.com/NGCP/communication-js",
-  "files": [
-    "dist/src"
-  ],
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
     "test": "npm run test:lint && npm run test:unit && npm run build",
-    "test:lint": "eslint --ext .ts \".\" && remark .",
+    "test:lint": "npm run test:eslint && npm run test:remark",
+    "test:eslint": "eslint --ext .ts \".\"",
+    "test:remark": "remark .",
     "test:unit": "nyc mocha --require ts-node/register \"test/**/*.test.ts\"",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
     "build": "tsc"
