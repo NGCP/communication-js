@@ -17,7 +17,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@serialport/binding-abstract": "^8.0.6",
+    "@serialport/binding-abstract": "^9.0.1",
     "@serialport/binding-mock": "^8.0.6",
     "@serialport/stream": "^8.0.6",
     "msgpack-lite": "^0.1.26",
