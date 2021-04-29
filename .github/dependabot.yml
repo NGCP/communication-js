@@ -1,0 +1,31 @@
+version: 2
+updates:
+- package-ecosystem: npm
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  labels:
+  - enhancement
+  ignore:
+  - dependency-name: mocha
+    versions:
+    - 8.2.1
+    - 8.3.0
+    - 8.3.1
+  - dependency-name: "@types/sinon"
+    versions:
+    - 9.0.10
+    - 9.0.11
+  - dependency-name: serialport
+    versions:
+    - 9.0.6
+  - dependency-name: "@serialport/binding-abstract"
+    versions:
+    - 9.0.2
+  - dependency-name: "@serialport/stream"
+    versions:
+    - 9.0.2
+  - dependency-name: "@serialport/binding-mock"
+    versions:
+    - 9.0.2
