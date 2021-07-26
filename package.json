@@ -39,7 +39,7 @@
     "eslint-import-resolver-typescript": "^2.0.0",
     "eslint-plugin-chai-friendly": "^0.5.0",
     "eslint-plugin-import": "^2.20.0",
-    "mocha": "^7.0.1",
+    "mocha": "^9.0.3",
     "nyc": "^15.0.0",
     "remark-cli": "^7.0.1",
     "remark-preset-lint-markdown-style-guide": "^2.1.3",
